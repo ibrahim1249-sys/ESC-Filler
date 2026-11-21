@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Serena's Workout Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a warm, plain-spoken coach standing next to her
+   IDEA: a coach's demo mirror: one figure doing each rep slowly, deep and full
+   PICTURE: 3D figure with live tempo bar and a range-of-motion gauge
+   COLOUR and TYPE: blush ground, deep ink, coral accent; Archivo + Inter
+   LAYOUT: exercise chips, big stage, tempo bar, cues, full plan; one column on phone */
+:root{color-scheme:light dark;--bg:light-dark(#fbf0ea,#160f11);--card:light-dark(#fff,#211719);--ink:light-dark(#22161a,#f7ece7);--mute:light-dark(#6e5a5e,#b8a4a7);--line:light-dark(#ecd7ce,#3a2b2e);--acc:#e4513a;--soft:light-dark(#ffe0d5,#47231d);--stage:light-dark(#f6e3da,#1d1416)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Archivo,Inter,sans-serif;margin:0;line-height:1.05;text-wrap:balance}
+h1{font-size:clamp(32px,6vw,48px);font-weight:800}
+h2{font-size:24px;font-weight:800}
+.wrap{max-width:1100px;margin:0 auto;padding:clamp(18px,3vw,36px) max(4vw,14px)}
+.sub{color:var(--mute);margin:8px 0 18px;max-width:60ch}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}
+.chips button{flex:none}
+button{font:600 15px/1 Inter,sans-serif;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.stage{position:relative;height:min(64vh,560px);min-height:360px;background:var(--stage);border-radius:22px;overflow:hidden;touch-action:none}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tag{position:absolute;left:16px;top:14px;right:70px;pointer-events:none}
+.tag b{display:block;font:800 21px/1.1 Archivo,sans-serif}
+.tag span{color:var(--mute);font-size:14px}
+.phase{position:absolute;left:16px;bottom:14px;right:70px;pointer-events:none}
+.phase .lbl{font:800 26px/1.05 Archivo,sans-serif}
+.phase .lbl.ecc{color:var(--acc)}
+.phase .cnt{font:600 14px Inter;color:var(--mute);margin-top:4px}
+.rom{position:absolute;right:16px;top:16px;bottom:16px;width:40px;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.rom small{font-size:11px;color:var(--mute);text-align:center;line-height:1.1}
+.rom .track{flex:1;width:10px;border-radius:6px;background:var(--line);position:relative}
+.rom .fill{position:absolute;left:0;right:0;bottom:0;border-radius:6px;background:var(--acc)}
+.rom .goal{position:absolute;left:-6px;right:-6px;top:0;height:3px;background:var(--ink);border-radius:2px}
+.hint{position:absolute;right:66px;top:16px;font-size:12px;color:var(--mute);pointer-events:none}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.bar{display:flex;gap:4px;margin:4px 0 4px}
+.seg{position:relative;height:12px;border-radius:6px;background:var(--line);overflow:hidden}
+.seg i{position:absolute;inset:0;width:0;background:var(--mute)}
+.seg.ecc i{background:var(--acc)}
+.segl{display:flex;gap:4px;font-size:12px;color:var(--mute)}
+.segl div{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px}
+.load{display:flex;flex-wrap:wrap;gap:8px 18px;margin:10px 0 14px}
+.load div{font-size:14px;color:var(--mute)}.load b{display:block;font:800 20px Archivo,sans-serif;color:var(--ink)}
+.depth{background:var(--soft);border-radius:14px;padding:12px 14px;margin:0 0 14px}
+.depth b{color:var(--acc)}
+.card ul{margin:0;padding-left:20px}.card li{margin:6px 0}
+.alt{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.alt:empty{display:none}
+.note{font-size:14px;color:var(--mute);margin-top:12px}
+.nav{display:flex;gap:8px;margin-top:16px}.nav button{flex:1}
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-top:14px;padding:0;list-style:none}
+.plan li{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px}
+.plan li:hover{border-color:var(--acc)}
+.plan .n{font:800 26px/1 Archivo,sans-serif;color:var(--acc);grid-row:span 2}
+.plan .m{font-size:14px;color:var(--mute)}
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-top:14px}
+.tips div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.tips b{display:block;font:800 17px Archivo,sans-serif;margin-bottom:4px}
+section{margin-top:34px}
+@media(max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.stage{height:58vh}}
+@media(max-width:600px){.hint{display:none}.phase .lbl{font-size:22px}}
+</style></head><body>
+<div class="wrap">
+  <h1>Serena's Workout Plan</h1>
+  <p class="sub">Full body, beginner friendly. Watch each move at the real tempo: lift for 2, hold for 1, lower for 3. Go all the way down and all the way up on every rep.</p>
+  <div class="chips" id="chips" role="tablist"></div>
+  <div class="grid">
+    <div>
+      <div class="stage" id="stage">
+        <canvas id="cv" aria-label="3D demo of the selected exercise"></canvas>
+        <div class="tag"><b id="tName"></b><span id="tSub"></span></div>
+        <div class="hint">Drag to turn</div>
+        <div class="rom" aria-hidden="true"><small>Full<br>range</small><div class="track"><div class="goal"></div><div class="fill" id="romFill"></div></div><small>Start</small></div>
+        <div class="phase"><div class="lbl" id="pLbl"></div><div class="cnt" id="pCnt"></div></div>
+      </div>
+      <div class="bar" id="bar"></div>
+      <div class="segl" id="segl"></div>
+      <div class="ctrl">
+        <button id="play" aria-pressed="true">Pause</button>
+        <button id="slow" aria-pressed="false">Slow-mo ½×</button>
+        <button data-v="angle" aria-pressed="true">Angle</button>
+        <button data-v="side" aria-pressed="false">Side</button>
+        <button data-v="front" aria-pressed="false">Front</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="alt" id="alt"></div>
+      <h2 id="cName"></h2>
+      <div class="load"><div><b id="cSets"></b>sets × reps</div><div><b id="cLoad"></b>weight</div><div><b>~7 s</b>per rep</div></div>
+      <div class="depth" id="cDepth"></div>
+      <ul id="cCues"></ul>
+      <p class="note" id="cNote"></p>
+      <div class="nav"><button id="prev">← Previous</button><button id="next">Next →</button></div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Why slow, and why deep</h2>
+    <div class="tips">
+      <div><b>The 3-second lower</b>The lowering part (orange on the bar) is where muscles do the most work. Taking 3 seconds keeps them working longer every rep: that's time under tension.</div>
+      <div><b>Full range, every rep</b>All the way down to a stretch, all the way up to a squeeze. A full rep with a light weight builds more than a half rep with a heavy one.</div>
+      <div><b>Breathe</b>Breathe in on the way down, out on the effort. Never hold your breath.</div>
+      <div><b>When to go heavier</b>When 15 slow, full-depth reps feel doable on both sets, go up one step next time. Shortening the range to finish reps means the weight is too heavy.</div>
+      <div><b>Rest</b>60–90 seconds between sets. Start with 5 minutes of easy cardio to warm up. Stop if anything hurts sharply.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The full plan</h2>
+    <ol class="plan" id="plan"></ol>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+{
+const D=Math.PI/180;
+const UP=[['Lift',2,0,1],['Squeeze',1,1,1],['Lower slowly',3,1,0,1],['Reset',1,0,0]];
+const EX=[
+ {id:'squat',name:'Kettlebell goblet squat',short:'Goblet squat',load:'20 lb',mode:'stand',hold:'kb',cam:{yaw:62,y:.8,dist:3.7},
+  A:{lean:3,hf:0,s:0,ha:7,sf:44,sa:-16,ex:122},B:{lean:34,hf:108,s:34,ha:12,sf:44,sa:-16,ex:122},
+  ph:[['Sit down slowly',3,0,1,1],['Hold at full depth',1,1,1],['Stand all the way up',2,1,0],['Reset',1,0,0]],
+  depth:'Sink until your hips are level with or just below your knees, then stand fully tall with hips locked out at the top.',
+  cues:['Hold the bell by the horns against your chest, elbows pointing down.','Feet a bit wider than hips, toes turned out slightly.','Sit back and down between your heels, knees tracking over your toes.','Chest up, heels planted the whole time.','Push the floor away to stand. Breathe out on the way up.'],
+  note:'If heels lift at the bottom, widen the stance a little rather than cutting depth.'},
+ {id:'press',name:'Dumbbell overhead press',short:'Overhead press',load:'5 lb each',mode:'stand',hold:'x',cam:{yaw:28,y:1.1,dist:3.3},
+  A:{sf:12,sa:72,ez:100,ha:5},B:{sf:6,sa:170,ez:8,ha:5},
+  ph:[['Press up',2,0,1],['Lock out overhead',1,1,1],['Lower slowly',3,1,0,1],['Reset',1,0,0]],
+  depth:'Bring the dumbbells all the way down to shoulder height, then press until your arms are straight beside your ears.',
+  cues:['Start with dumbbells at your shoulders, palms forward.','Squeeze your stomach and glutes so your lower back doesn’t arch.','Press straight up, finishing with biceps by your ears.','Take a full 3 seconds back down to the shoulders.'],
+  note:'Sitting on a bench with a back rest is fine too. Same range.'},
+ {id:'fly',name:'Chest fly',short:'Chest fly',load:'5 lb each',mode:'lie',root:[0,.56,.32],hold:'z',props:['bench'],cam:{yaw:205,pitch:34,y:.55,dist:3},
+  A:{sf:90,sy:2,ez:-14,hf:-15,kb:95},B:{sf:90,sy:86,ez:-24,hf:-15,kb:95},
+  ph:[['Open arms slowly',3,0,1,1],['Feel the stretch',1,1,1],['Hug back up',2,1,0],['Squeeze',1,0,0]],
+  depth:'Open until your elbows reach about bench level and you feel a stretch across your chest, then bring the weights all the way back together over your chest.',
+  cues:['Lie on a flat bench, feet flat on the floor.','Weights over your chest, palms facing each other, a soft bend in the elbows.','Open wide in an arc, like hugging a big tree.','Keep the same soft elbow bend the whole way; don’t turn it into a press.','Squeeze your chest as the weights meet at the top.'],
+  note:'On the pec-deck (fly machine) it’s the same hug motion, seated: let the handles go back until you feel the stretch.'},
+ {id:'curl',name:'Dumbbell curl',short:'Curl',load:'5 lb each',mode:'stand',hold:'x',cam:{yaw:42,y:.95,dist:3},
+  A:{sa:6,ex:2,ha:5},B:{sa:6,sf:6,ex:148,ha:5},ph:UP.map(p=>p.slice()),
+  depth:'Start with arms completely straight and finish with the weights up at your shoulders. Straighten fully at the bottom of every rep.',
+  cues:['Stand tall, elbows pinned to your sides.','Curl up without swinging. Only the forearms move.','Squeeze at the top for a beat.','Lower for a slow 3-count until your arms are fully straight.'],
+  note:'If she has to lean back to lift it, the weight is too heavy.'},
+ {id:'tri',name:'Overhead triceps extension',short:'Triceps',load:'Light dumbbell',mode:'stand',hold:'two',cam:{yaw:138,y:1.1,dist:3.5},
+  A:{sf:168,sa:-14,ex:4,ha:5},B:{sf:172,sa:-14,ex:150,ha:5},
+  ph:[['Lower behind head',3,0,1,1],['Feel the stretch',1,1,1],['Press up straight',2,1,0],['Reset',1,0,0]],
+  depth:'Lower until the dumbbell is deep behind your head and you feel the back of your arms stretch, then straighten your arms all the way.',
+  cues:['Hold one dumbbell with both hands, cupping the top plate.','Press it overhead with your elbows close to your head, pointing forward.','Only the elbows bend. Upper arms stay still.','Keep your ribs down so your back doesn’t arch.'],
+  note:'Start with 5 lb, held in both hands. Doing it seated on a bench is fine.'},
+ {id:'row',name:'Seated machine row',short:'Row',load:'Light stack',mode:'seat',root:[0,.5,-.05],hold:'z',props:['rowm'],alt:'pull',cam:{yaw:70,y:.85,dist:3.4},
+  A:{lean:10,hf:90,kb:90,sf:80,sa:6,ex:0},B:{lean:-2,hf:90,kb:90,sf:-32,sa:12,ex:112},
+  ph:[['Pull to ribs',2,0,1],['Squeeze shoulder blades',1,1,1],['Reach out slowly',3,1,0,1],['Full stretch',1,0,0]],
+  depth:'Reach until your arms are straight and you feel your upper back stretch, then pull until the handles touch your lower ribs.',
+  cues:['Sit tall, chest against the pad, feet planted.','Let the handles pull your shoulders forward at the reach.','Pull with your elbows, squeezing your shoulder blades together.','Let the weight back out slowly. Don’t let the stack touch down.'],
+  note:'Pick a weight where the last 2–3 reps are hard but still full range.'},
+ {id:'pull',name:'Assisted pull-up',short:'Assisted pull-up',load:'Assist: heavy',mode:'hang',bar:2.25,hold:'x',props:['pullm'],cam:{yaw:38,pitch:6,y:1.45,dist:4},
+  A:{sa:166,ez:10,sf:4,hf:0,kb:92},B:{sa:62,ez:112,sf:10,hf:0,kb:92,lean:-8},
+  ph:[['Pull up',2,0,1],['Chin over bar',1,1,1],['Lower to full hang',3,1,0,1],['Dead hang',1,0,0]],
+  depth:'Lower all the way to straight arms at the bottom, then pull until your chin clears the bar.',
+  cues:['Kneel on the pad, hands just wider than shoulders, palms facing away.','Start from a full hang: arms straight, shoulders stretched.','Pull your elbows down toward your back pockets.','Lower for a slow 3-count all the way to straight arms.'],
+  note:'On this machine more weight means more help. Start heavy and drop the assist as she gets stronger.'},
+ {id:'ham',name:'Seated hamstring curl',short:'Hamstring curl',load:'Light stack',mode:'seat',root:[0,.6,0],footRel:1,props:['hamm'],cam:{yaw:72,y:.7,dist:3.2},
+  A:{lean:-12,hf:90,kb:2,sf:20,sa:14,ex:30},B:{lean:-12,hf:90,kb:112,sf:20,sa:14,ex:30},ph:UP.map(p=>p.slice()),
+  depth:'Start with legs completely straight, then curl your heels as far under the seat as you can.',
+  cues:['Line up your knees with the machine’s pivot point.','Ankle pad just above your heels, thigh pad snug.','Curl your heels down and back under the seat.','Return slowly until your legs are fully straight. Don’t let the stack slam.'],
+  note:'Pick a weight where the last 2–3 reps are hard but still full range.'}
+];
+EX.forEach(e=>{e.sets='2 × 10–15'});
+const SLOTS=['squat','press','fly','curl','tri','row','ham'];
+const byId=Object.fromEntries(EX.map(e=>[e.id,e]));
+const $=id=>document.getElementById(id);
+
+/* ---------- 3D ---------- */
+const cv=$('cv'),stage=$('stage');
+const ren=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.shadowMap.enabled=true;ren.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(36,1,.05,50);
+scene.add(new THREE.HemisphereLight(0xfff4ef,0x6a4a50,.9));
+const sun=new THREE.DirectionalLight(0xffffff,.85);sun.position.set(2.2,5,3);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera,{left:-2.5,right:2.5,top:3,bottom:-2.5});sun.shadow.bias=-.0005;scene.add(sun);
+const fl=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.ShadowMaterial({opacity:.22}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;scene.add(fl);
+const ring=new THREE.Mesh(new THREE.RingGeometry(1.15,1.18,72),new THREE.MeshBasicMaterial({color:0xe4513a,transparent:true,opacity:.35}));ring.rotation.x=-Math.PI/2;ring.position.y=.002;scene.add(ring);
+const mat=(c,r=.55,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+const SKIN=mat(0xe4513a,.5),SKIN2=mat(0xf28c70,.5),GEAR=mat(0x36333b,.45,.3),PAD=mat(0x4d3b42,.85),STEEL=mat(0xa4a9b0,.3,.7),HAIR=mat(0x3a2622,.7);
+const sh=o=>{o.castShadow=true;o.receiveShadow=true;return o};
+const sph=(r,m)=>sh(new THREE.Mesh(new THREE.SphereGeometry(r,22,16),m));
+const cyl=(r1,r2,h,m,s=18)=>sh(new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,s),m));
+const box=(w,h,d,m)=>sh(new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m));
+function seg(len,r,m){const g=new THREE.Group(),c=cyl(r,r*.82,len,m);c.position.y=-len/2;g.add(c);const e=new THREE.Group();e.position.y=-len;g.add(e);e.add(sph(r*.98,SKIN2));g.userData.end=e;return g}
+const at=(o,x,y,z)=>{o.position.set(x,y,z);return o};
+
+const root=new THREE.Group();scene.add(root);
+const pel=sph(.15,SKIN);pel.scale.set(1.05,.7,.75);pel.position.y=.02;root.add(pel);
+const torso=new THREE.Group();torso.position.y=.06;root.add(torso);
+const waist=at(cyl(.12,.135,.24,SKIN),0,.12,0);waist.scale.z=.72;torso.add(waist);
+const chest=at(cyl(.17,.125,.28,SKIN),0,.34,0);chest.scale.z=.68;torso.add(chest);
+const yoke=at(cyl(.06,.06,.36,SKIN),0,.465,0);yoke.rotation.z=Math.PI/2;torso.add(yoke);
+torso.add(at(cyl(.045,.05,.1,SKIN2),0,.53,0));
+const head=at(sph(.105,SKIN2),0,.665,.01);torso.add(head);
+torso.add(at(sph(.11,HAIR),0,.69,-.02));torso.add(at(sph(.05,HAIR),0,.68,-.13));
+const arms=[],legs=[];
+for(const s of [1,-1]){
+  const a=seg(.28,.048,SKIN);a.position.set(.19*s,.46,0);a.rotation.order='YXZ';a.add(sph(.058,SKIN2));torso.add(a);
+  const e=seg(.25,.04,SKIN);a.userData.end.add(e);arms.push({sh:a,el:e,hand:e.userData.end,s});
+  const h=seg(.42,.068,SKIN);h.position.set(.095*s,0,0);root.add(h);
+  const k=seg(.41,.052,SKIN);h.userData.end.add(k);const an=new THREE.Group();k.userData.end.add(an);
+  an.add(at(box(.085,.055,.22,GEAR),0,-.04,.06));legs.push({hp:h,kn:k,an,s});
+}
+function dumbbell(len,pr){const g=new THREE.Group();g.add(cyl(.013,.013,len,STEEL,10));for(const y of [-1,1])g.add(at(cyl(pr,pr,.045,GEAR,6),0,y*len/2,0));return g}
+const dbs=arms.map(a=>{const d=dumbbell(.2,.042);a.hand.add(d);return d});
+const twoDB=dumbbell(.24,.055);scene.add(twoDB);
+const kbell=new THREE.Group();const kb1=at(sph(.105,GEAR),0,-.15,0);kbell.add(kb1);const hnd=new THREE.Mesh(new THREE.TorusGeometry(.065,.014,8,24,Math.PI),GEAR);hnd.position.y=-.06;kbell.add(hnd);scene.add(kbell);
+const grips=arms.map(a=>{const g=at(cyl(.018,.018,.12,GEAR,10),0,0,0);g.rotation.x=Math.PI/2;a.hand.add(g);return g});
+
+/* props */
+const P={};
+P.bench=new THREE.Group();P.bench.add(at(box(.34,.08,.98,PAD),0,.41,-.07));P.bench.add(at(box(.08,.37,.08,GEAR),0,.185,-.45));P.bench.add(at(box(.08,.37,.08,GEAR),0,.185,.3));
+function stack(x,z){const g=new THREE.Group();g.add(at(box(.08,1.7,.08,GEAR),x-.2,.85,z));g.add(at(box(.08,1.7,.08,GEAR),x+.2,.85,z));g.add(at(box(.5,.06,.12,GEAR),x,1.7,z));
+  for(let i=0;i<6;i++)g.add(at(box(.3,.05,.1,STEEL),x,.05+i*.055,z));const mv=new THREE.Group();for(let i=0;i<3;i++)mv.add(at(box(.3,.05,.1,i?STEEL:mat(0xe4513a)),x,.4+i*.055,z));g.add(mv);g.userData.mv=mv;return g}
+P.rowm=new THREE.Group();P.rowm.add(at(box(.4,.08,.4,PAD),0,.4,-.08));P.rowm.add(at(box(.08,.36,.08,GEAR),0,.18,-.08));
+P.rowm.add(at(box(.32,.34,.08,PAD),0,.97,.29));P.rowm.add(at(box(.06,.06,.75,GEAR),0,.5,.55));P.rowm.add(at(box(.06,.5,.06,GEAR),0,.75,.4));
+const rs=stack(0,1.05);P.rowm.add(rs);P.rowm.userData.mv=rs.userData.mv;
+const cableM=new THREE.LineBasicMaterial({color:0x36333b});
+const cables=[0,1].map(()=>{const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);const l=new THREE.Line(g,cableM);P.rowm.add(l);return l});
+P.pullm=new THREE.Group();P.pullm.add(at(cyl(.022,.022,1.3,STEEL,12),0,2.25,0));P.pullm.children[0].rotation.z=Math.PI/2;
+for(const x of [-.6,.6])P.pullm.add(at(box(.08,2.35,.08,GEAR),x,1.17,-.15));P.pullm.add(at(box(1.28,.08,.08,GEAR),0,2.3,-.15));
+const kpad=new THREE.Group();kpad.add(at(box(.42,.07,.32,PAD),0,0,-.05));kpad.add(at(box(.06,.06,.5,GEAR),0,-.06,-.35));P.pullm.add(kpad);
+const ps=stack(0,-.75);P.pullm.add(ps);P.pullm.userData.mv=ps.userData.mv;
+P.hamm=new THREE.Group();P.hamm.add(at(box(.42,.1,.42,PAD),0,.5,-.02));P.hamm.add(at(box(.08,.45,.08,GEAR),0,.225,-.02));
+const bp=at(box(.4,.6,.08,PAD),0,.92,-.28);bp.rotation.x=-.2;P.hamm.add(bp);
+const tp=at(cyl(.05,.05,.46,PAD),0,.74,.3);tp.rotation.z=Math.PI/2;P.hamm.add(tp);P.hamm.add(at(box(.05,.5,.05,GEAR),.27,.5,.3));
+const hs=stack(.75,-.15);P.hamm.add(hs);P.hamm.userData.mv=hs.userData.mv;
+const roller=cyl(.045,.045,.44,PAD);roller.rotation.z=Math.PI/2;roller.position.set(-.095,.03,-.07);legs[0].an.add(roller);
+Object.values(P).forEach(g=>{g.visible=false;scene.add(g)});
+
+/* pose */
+const v=new THREE.Vector3(),v2=new THREE.Vector3(),e1=new THREE.Vector3(),Y=new THREE.Vector3(0,1,0),q=new THREE.Quaternion();
+function apply(e,p,t){
+  root.rotation.set(e.mode==='lie'?-Math.PI/2:0,0,0);root.position.set(0,0,0);
+  torso.rotation.x=(p.lean||0)*D;
+  for(const a of arms){a.sh.rotation.set(-(p.sf||0)*D,(p.sy||0)*D*a.s,(p.sa||0)*D*a.s);a.el.rotation.set(-(p.ex||0)*D,0,(p.ez||0)*D*a.s)}
+  const kb=p.kb!=null?p.kb:(p.hf||0)+(p.s||0);
+  for(const l of legs){l.hp.rotation.set(-(p.hf||0)*D,0,(p.ha||0)*D*l.s);l.kn.rotation.x=kb*D;l.an.rotation.x=e.footRel?0:-(root.rotation.x+l.hp.rotation.x+l.kn.rotation.x)}
+  root.updateMatrixWorld(true);
+  if(e.mode==='stand'){legs[0].an.getWorldPosition(v);root.position.set(0,.068-v.y,-v.z)}
+  else if(e.mode==='hang'){arms[0].hand.getWorldPosition(v);root.position.set(0,e.bar-.02-v.y,-v.z)}
+  else root.position.fromArray(e.root);
+  root.updateMatrixWorld(true);
+  arms[0].hand.getWorldPosition(v);arms[1].hand.getWorldPosition(v2);
+  if(e.hold==='kb'){kbell.position.copy(v).add(v2).multiplyScalar(.5);torso.getWorldQuaternion(kbell.quaternion)}
+  if(e.hold==='two'){arms[0].el.getWorldPosition(e1);const mid=v.clone().add(v2).multiplyScalar(.5),dir=mid.clone().sub(e1).normalize();
+    twoDB.quaternion.setFromUnitVectors(Y,dir);twoDB.position.copy(mid).addScaledVector(dir,-.1)}
+  const g=P[e.props&&e.props[0]];if(g&&g.userData.mv)g.userData.mv.position.y=t*.2;
+  if(e.id==='row'){[v,v2].forEach((h,i)=>{const pos=cables[i].geometry.attributes.position;pos.setXYZ(0,h.x,h.y,h.z);pos.setXYZ(1,i?-.08:.08,.84,1.0);pos.needsUpdate=true})}
+  if(e.id==='pull'){legs[0].kn.userData.end.getWorldPosition(v);kpad.position.set(0,v.y-.1,v.z)}
+}
+function lerp(A,B,t){const o={};for(const k of new Set([...Object.keys(A),...Object.keys(B)])){const a=A[k]??B[k],b=B[k]??A[k];o[k]=a+(b-a)*t}return o}
+
+/* camera */
+let view='angle',yawOff=0,pitchOff=0,cur=EX[0];
+function camUpdate(){const c=cur.cam,narrow=cam.aspect<.85;
+  const yaw=(view==='front'?0:view==='side'?90:c.yaw)*D+yawOff,pitch=((c.pitch??10)*D)+pitchOff,d=c.dist*(narrow?1.3:1);
+  cam.position.set(Math.sin(yaw)*Math.cos(pitch)*d,c.y+Math.sin(pitch)*d,Math.cos(yaw)*Math.cos(pitch)*d);cam.lookAt(0,c.y,cur.mode==='lie'?.05:0)}
+const ro=new ResizeObserver(()=>{const w=stage.clientWidth,h=stage.clientHeight;ren.setSize(w,h,false);cam.aspect=w/h;cam.setViewOffset(w,h,0,h*.05,w,h);cam.updateProjectionMatrix();camUpdate()});ro.observe(stage);
+let drag=null;
+stage.addEventListener('pointerdown',ev=>{drag={x:ev.clientX,y:ev.clientY,yo:yawOff,po:pitchOff};stage.setPointerCapture(ev.pointerId)});
+stage.addEventListener('pointermove',ev=>{if(!drag)return;yawOff=drag.yo-(ev.clientX-drag.x)*.01;pitchOff=Math.max(-.15,Math.min(.9,drag.po+(ev.clientY-drag.y)*.006));camUpdate()});
+const end=()=>drag=null;stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);
+
+/* UI */
+const name=e=>e.id==='row'||e.id==='pull'?'Row or assisted pull-up':e.short;
+$('chips').innerHTML=SLOTS.map((id,i)=>`<button role="tab" data-i="${i}">${i+1} · ${name(byId[id])}</button>`).join('');
+$('plan').innerHTML=SLOTS.map((id,i)=>{const e=byId[id],alt=e.alt&&byId[e.alt];
+  return `<li data-i="${i}"><span class="n">${i+1}</span><b>${e.name}${alt?' <span class="m">or</span> '+alt.name:''}</b><span class="m">${e.sets} · ${e.load}${alt?' / '+alt.load:''}</span></li>`}).join('');
+let slot=0,t=0,rep=1,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,speed=1,lastPh=-1,lastCnt=-1;
+function select(id){
+  cur=byId[id];slot=SLOTS.indexOf(id);if(slot<0)slot=SLOTS.indexOf('row');
+  t=0;rep=1;lastPh=-1;yawOff=0;pitchOff=0;
+  document.querySelectorAll('#chips button').forEach((b,i)=>b.setAttribute('aria-pressed',i===slot));
+  Object.entries(P).forEach(([k,g])=>g.visible=(cur.props||[]).includes(k));
+  dbs.forEach(d=>{d.visible=cur.hold==='x'||cur.hold==='z';d.rotation.set(cur.hold==='z'?Math.PI/2:0,0,cur.hold==='x'?Math.PI/2:0)});
+  grips.forEach(g=>g.visible=cur.id==='row');if(cur.id==='row')dbs.forEach(d=>d.visible=false);
+  if(cur.id==='pull')dbs.forEach(d=>d.visible=false);
+  twoDB.visible=cur.hold==='two';kbell.visible=cur.hold==='kb';roller.visible=cur.id==='ham';ring.visible=cur.mode==='stand';
+  $('tName').textContent=cur.name;$('tSub').textContent=`${cur.sets} · ${cur.load}`;
+  $('cName').textContent=cur.name;$('cSets').textContent=cur.sets;$('cLoad').textContent=cur.load;
+  $('cDepth').innerHTML='<b>Full range:</b> '+cur.depth;$('cCues').innerHTML=cur.cues.map(c=>`<li>${c}</li>`).join('');$('cNote').textContent=cur.note;
+  const pair=cur.id==='row'||cur.id==='pull';
+  $('alt').innerHTML=pair?['row','pull'].map(k=>`<button data-alt="${k}" aria-pressed="${k===cur.id}">${byId[k].short}</button>`).join(''):'';
+  const tot=cur.ph.reduce((s,p)=>s+p[1],0);
+  $('bar').innerHTML=cur.ph.map(p=>`<div class="seg${p[4]?' ecc':''}" style="flex:${p[1]}"><i></i></div>`).join('');
+  $('segl').innerHTML=cur.ph.map(p=>`<div style="flex:${p[1]}">${p[1]}s</div>`).join('');
+  cur.tot=tot;camUpdate();
+  try{history.replaceState(null,'','#'+cur.id)}catch(_){}
+}
+$('chips').onclick=ev=>{const b=ev.target.closest('button');if(b)select(SLOTS[+b.dataset.i])};
+$('alt').onclick=ev=>{const b=ev.target.closest('button');if(b)select(b.dataset.alt)};
+$('plan').onclick=ev=>{const li=ev.target.closest('li');if(li){select(SLOTS[+li.dataset.i]);stage.scrollIntoView({behavior:'smooth',block:'center'})}};
+$('prev').onclick=()=>select(SLOTS[(slot+SLOTS.length-1)%SLOTS.length]);
+$('next').onclick=()=>select(SLOTS[(slot+1)%SLOTS.length]);
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';$('play').setAttribute('aria-pressed',playing)};
+$('slow').onclick=()=>{speed=speed===1?.5:1;$('slow').setAttribute('aria-pressed',speed!==1)};
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;yawOff=0;pitchOff=0;document.querySelectorAll('[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));camUpdate()});
+$('play').textContent=playing?'Pause':'Play';$('play').setAttribute('aria-pressed',playing);
+
+const ease=u=>u<.5?2*u*u:1-((-2*u+2)**2)/2;
+let prev=performance.now();
+function frame(now){
+  const dt=Math.min(.1,(now-prev)/1000);prev=now;
+  if(playing){t+=dt*speed;if(t>=cur.tot){t-=cur.tot;rep=rep%12+1}}
+  let s=0,i=0;while(i<cur.ph.length-1&&t>=s+cur.ph[i][1]){s+=cur.ph[i][1];i++}
+  const p=cur.ph[i],u=Math.min(1,(t-s)/p[1]),val=p[2]+(p[3]-p[2])*ease(u);
+  apply(cur,lerp(cur.A,cur.B,val),val);
+  const gauge=cur.ph[0][2]===0&&cur.ph[0][3]===1?val:val;$('romFill').style.height=(gauge*100).toFixed(1)+'%';
+  const segs=$('bar').children;for(let k=0;k<segs.length;k++)segs[k].firstChild.style.width=(k<i?100:k>i?0:u*100)+'%';
+  const cnt=Math.max(1,Math.ceil(p[1]-(t-s)));
+  if(i!==lastPh||cnt!==lastCnt){lastPh=i;lastCnt=cnt;$('pLbl').textContent=p[0];$('pLbl').className='lbl'+(p[4]?' ecc':'');$('pCnt').textContent=`${cnt}… · rep ${rep} of 12`}
+  ren.render(scene,cam);requestAnimationFrame(frame);
+}
+const start=(location.hash||'').slice(1);
+select(byId[start]?start:'squat');
+addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(byId[h]&&h!==cur.id)select(h)});
+window.seekRep=x=>{t=x};
+requestAnimationFrame(frame);
+}
+</script>
+</body></html>
