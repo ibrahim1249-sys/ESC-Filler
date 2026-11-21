@@ -50,6 +50,9 @@ button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px}
 .load{display:flex;flex-wrap:wrap;gap:8px 18px;margin:10px 0 14px}
 .load div{font-size:14px;color:var(--mute)}.load b{display:block;font:800 20px Archivo,sans-serif;color:var(--ink)}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--acc);margin-right:6px;vertical-align:-1px}.dot.s{background:#f7a47e}
+.lg{display:flex;gap:12px;margin-top:6px;font-size:13px;color:var(--mute)}
+.mh{font-size:16px;margin:0 0 6px}.mus{margin:0 0 14px;display:grid;gap:4px}
 .depth{background:var(--soft);border-radius:14px;padding:12px 14px;margin:0 0 14px}
 .depth b{color:var(--acc)}
 .card ul{margin:0;padding-left:20px}.card li{margin:6px 0}
@@ -77,7 +80,7 @@ section{margin-top:34px}
     <div>
       <div class="stage" id="stage">
         <canvas id="cv" aria-label="3D demo of the selected exercise"></canvas>
-        <div class="tag"><b id="tName"></b><span id="tSub"></span></div>
+        <div class="tag"><b id="tName"></b><span id="tSub"></span><div class="lg"><span><i class="dot"></i>Main muscles</span><span><i class="dot s"></i>Helping</span></div></div>
         <div class="hint">Drag to turn</div>
         <div class="rom" aria-hidden="true"><small>Full<br>range</small><div class="track"><div class="goal"></div><div class="fill" id="romFill"></div></div><small>Start</small></div>
         <div class="phase"><div class="lbl" id="pLbl"></div><div class="cnt" id="pCnt"></div></div>
@@ -96,6 +99,7 @@ section{margin-top:34px}
       <div class="alt" id="alt"></div>
       <h2 id="cName"></h2>
       <div class="load"><div><b id="cSets"></b>sets × reps</div><div><b id="cLoad"></b>weight</div><div><b>~7 s</b>per rep</div></div>
+      <h3 class="mh">Muscles worked</h3><div class="mus" id="cMus"></div>
       <div class="depth" id="cDepth"></div>
       <ul id="cCues"></ul>
       <p class="note" id="cNote"></p>
@@ -167,13 +171,15 @@ const EX=[
   depth:'Lower all the way to straight arms at the bottom, then pull until your chin clears the bar.',
   cues:['Kneel on the pad, hands just wider than shoulders, palms facing away.','Start from a full hang: arms straight, shoulders stretched.','Pull your elbows down toward your back pockets.','Lower for a slow 3-count all the way to straight arms.'],
   note:'On this machine more weight means more help. Start heavy and drop the assist as she gets stronger.'},
- {id:'ham',name:'Seated hamstring curl',short:'Hamstring curl',load:'Light stack',mode:'seat',root:[0,.6,0],footRel:1,props:['hamm'],cam:{yaw:72,y:.7,dist:3.2},
+ {id:'ham',name:'Seated hamstring curl',short:'Hamstring curl',load:'Light stack',mode:'seat',root:[0,.6,0],footRel:1,props:['hamm'],cam:{yaw:-62,pitch:2,y:.7,dist:3.2},
   A:{lean:-12,hf:90,kb:2,sf:20,sa:14,ex:30},B:{lean:-12,hf:90,kb:112,sf:20,sa:14,ex:30},ph:UP.map(p=>p.slice()),
   depth:'Start with legs completely straight, then curl your heels as far under the seat as you can.',
   cues:['Line up your knees with the machine’s pivot point.','Ankle pad just above your heels, thigh pad snug.','Curl your heels down and back under the seat.','Return slowly until your legs are fully straight. Don’t let the stack slam.'],
   note:'Pick a weight where the last 2–3 reps are hard but still full range.'}
 ];
-EX.forEach(e=>{e.sets='2 × 10–15'});
+const MW={squat:[['quads','glutes'],['hams','abs','calves']],press:[['delts'],['triceps','back','abs']],fly:[['chest'],['delts']],curl:[['biceps'],['forearms']],
+ tri:[['triceps'],['abs']],row:[['lats','back'],['biceps','delts']],pull:[['lats'],['biceps','back','forearms']],ham:[['hams'],['calves']]};
+EX.forEach(e=>{e.sets='2 × 10–15';[e.main,e.also]=MW[e.id]});
 const SLOTS=['squat','press','fly','curl','tri','row','ham'];
 const byId=Object.fromEntries(EX.map(e=>[e.id,e]));
 const $=id=>document.getElementById(id);
@@ -190,7 +196,7 @@ Object.assign(sun.shadow.camera,{left:-2.5,right:2.5,top:3,bottom:-2.5});sun.sha
 const fl=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.ShadowMaterial({opacity:.22}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;scene.add(fl);
 const ring=new THREE.Mesh(new THREE.RingGeometry(1.15,1.18,72),new THREE.MeshBasicMaterial({color:0xe4513a,transparent:true,opacity:.35}));ring.rotation.x=-Math.PI/2;ring.position.y=.002;scene.add(ring);
 const mat=(c,r=.55,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
-const SKIN=mat(0xe4513a,.5),SKIN2=mat(0xf28c70,.5),GEAR=mat(0x36333b,.45,.3),PAD=mat(0x4d3b42,.85),STEEL=mat(0xa4a9b0,.3,.7),HAIR=mat(0x3a2622,.7);
+const SKIN=mat(0xb3aaae,.55),SKIN2=mat(0xd2cacb,.55),GEAR=mat(0x36333b,.45,.3),PAD=mat(0x4d3b42,.85),STEEL=mat(0xa4a9b0,.3,.7),HAIR=mat(0x3a2622,.7);
 const sh=o=>{o.castShadow=true;o.receiveShadow=true;return o};
 const sph=(r,m)=>sh(new THREE.Mesh(new THREE.SphereGeometry(r,22,16),m));
 const cyl=(r1,r2,h,m,s=18)=>sh(new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,s),m));
@@ -215,6 +221,17 @@ for(const s of [1,-1]){
   const k=seg(.41,.052,SKIN);h.userData.end.add(k);const an=new THREE.Group();k.userData.end.add(an);
   an.add(at(box(.085,.055,.22,GEAR),0,-.04,.06));legs.push({hp:h,kn:k,an,s});
 }
+const PRIM=new THREE.MeshStandardMaterial({color:0xe4513a,roughness:.45,emissive:0xe4513a,emissiveIntensity:.15}),SEC=mat(0xf7a47e,.5);
+const MUS={};
+function mus(k,par,x,y,z,sx,sy,sz){const m=sph(1,SKIN);m.userData.s=[sx,sy,sz];m.scale.set(sx,sy,sz);m.position.set(x,y,z);par.add(m);(MUS[k]=MUS[k]||[]).push(m)}
+for(const s of [1,-1]){
+  mus('chest',torso,.075*s,.4,.083,.075,.06,.04);mus('lats',torso,.12*s,.29,-.035,.045,.13,.05);mus('glutes',root,.065*s,-.01,-.075,.075,.08,.06);
+  const a=arms.find(o=>o.s===s),l=legs.find(o=>o.s===s);
+  mus('delts',a.sh,0,-.02,0,.068,.08,.068);mus('biceps',a.sh,0,-.14,.03,.04,.09,.035);mus('triceps',a.sh,0,-.14,-.03,.042,.1,.035);mus('forearms',a.el,0,-.08,.015,.04,.08,.035);
+  mus('quads',l.hp,0,-.2,.035,.06,.16,.045);mus('hams',l.hp,0,-.22,-.035,.058,.15,.045);mus('calves',l.kn,0,-.13,-.03,.045,.1,.04);
+}
+mus('abs',torso,0,.17,.072,.07,.11,.03);mus('back',torso,0,.41,-.085,.12,.07,.04);
+const MN={quads:'Quads',glutes:'Glutes',hams:'Hamstrings',abs:'Core',calves:'Calves',delts:'Shoulders',triceps:'Triceps',back:'Upper back',chest:'Chest',biceps:'Biceps',forearms:'Forearms (grip)',lats:'Lats'};
 function dumbbell(len,pr){const g=new THREE.Group();g.add(cyl(.013,.013,len,STEEL,10));for(const y of [-1,1])g.add(at(cyl(pr,pr,.045,GEAR,6),0,y*len/2,0));return g}
 const dbs=arms.map(a=>{const d=dumbbell(.2,.042);a.hand.add(d);return d});
 const twoDB=dumbbell(.24,.055);scene.add(twoDB);
@@ -293,6 +310,8 @@ function select(id){
   twoDB.visible=cur.hold==='two';kbell.visible=cur.hold==='kb';roller.visible=cur.id==='ham';ring.visible=cur.mode==='stand';
   $('tName').textContent=cur.name;$('tSub').textContent=`${cur.sets} · ${cur.load}`;
   $('cName').textContent=cur.name;$('cSets').textContent=cur.sets;$('cLoad').textContent=cur.load;
+  for(const k in MUS)MUS[k].forEach(m=>{const a=cur.main.includes(k),b=cur.also.includes(k),f=a?1.3:b?1.15:1;m.material=a?PRIM:b?SEC:SKIN;m.scale.set(...m.userData.s.map(v=>v*f))});
+  $('cMus').innerHTML=`<div><i class="dot"></i><b>Main:</b> ${cur.main.map(k=>MN[k]).join(', ')}</div><div><i class="dot s"></i><b>Helping:</b> ${cur.also.map(k=>MN[k]).join(', ')}</div>`;
   $('cDepth').innerHTML='<b>Full range:</b> '+cur.depth;$('cCues').innerHTML=cur.cues.map(c=>`<li>${c}</li>`).join('');$('cNote').textContent=cur.note;
   const pair=cur.id==='row'||cur.id==='pull';
   $('alt').innerHTML=pair?['row','pull'].map(k=>`<button data-alt="${k}" aria-pressed="${k===cur.id}">${byId[k].short}</button>`).join(''):'';
@@ -319,7 +338,7 @@ function frame(now){
   if(playing){t+=dt*speed;if(t>=cur.tot){t-=cur.tot;rep=rep%12+1}}
   let s=0,i=0;while(i<cur.ph.length-1&&t>=s+cur.ph[i][1]){s+=cur.ph[i][1];i++}
   const p=cur.ph[i],u=Math.min(1,(t-s)/p[1]),val=p[2]+(p[3]-p[2])*ease(u);
-  apply(cur,lerp(cur.A,cur.B,val),val);
+  apply(cur,lerp(cur.A,cur.B,val),val);PRIM.emissiveIntensity=.12+.5*val;
   const gauge=cur.ph[0][2]===0&&cur.ph[0][3]===1?val:val;$('romFill').style.height=(gauge*100).toFixed(1)+'%';
   const segs=$('bar').children;for(let k=0;k<segs.length;k++)segs[k].firstChild.style.width=(k<i?100:k>i?0:u*100)+'%';
   const cnt=Math.max(1,Math.ceil(p[1]-(t-s)));
